@@ -22,13 +22,6 @@ abstract class PersistentAsynchronousTask extends AbstractAsynchronousTask {
     }
 
     /**
-     * Returns the task's name.
-     *
-     * @return
-     */
-    public abstract String getTaskName()
-
-    /**
      * Loads an existing task.
      *
      * @param taskId
@@ -36,7 +29,7 @@ abstract class PersistentAsynchronousTask extends AbstractAsynchronousTask {
     public PersistentAsynchronousTask(int taskId) {
         // Load the task
         try {
-            task = AsynchronousTaskDomain.get(taskId)
+            task = AsynchronousTaskDomain.read(taskId)
         }
         catch (Exception e) {
             throw new PersistentAsynchronousTaskLoadException("Unable to load task with ID '$taskId'", e)

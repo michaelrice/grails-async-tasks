@@ -1,6 +1,13 @@
 package com.budjb.asynchronoustasks
 
+import org.apache.log4j.Logger
+
 abstract class AbstractAsynchronousTask implements AsynchronousTask {
+    /**
+     * Logger.
+     */
+    Logger log = Logger.getLogger(getClass())
+
     /**
      * Starts a task.
      */
@@ -69,11 +76,24 @@ abstract class AbstractAsynchronousTask implements AsynchronousTask {
     abstract protected void process()
 
     /**
+     * Returns the task's name.
+     *
+     * @return
+     */
+    public abstract String getTaskName()
+
+    /**
      * Marks the task as started and starts actual processing.
      */
     @Override
     public void fire() {
-        start()
-        process()
+        try {
+            start()
+            process()
+        }
+        catch (Exception e) {
+            log.error("Unhandled exception caught while running task '${getTaskName()}'", e)
+            failure("unhandledException", "unhandled exception '${e.getClass().toString()}' caught while running task")
+        }
     }
 }

@@ -32,4 +32,13 @@ public enum AsynchronousTaskState {
      * Task completed successfully.
      */
     COMPLETED
+
+    /**
+     * Returns the enum string lower cased.
+     *
+     * @return
+     */
+    public String toString() {
+        return name().toLowerCase()
+    }
 }
