@@ -22,6 +22,13 @@ abstract class PersistentAsynchronousTask extends AbstractAsynchronousTask {
     }
 
     /**
+     * Returns the task's name.
+     *
+     * @return
+     */
+    public abstract String getTaskName()
+
+    /**
      * Loads an existing task.
      *
      * @param taskId
@@ -42,14 +49,6 @@ abstract class PersistentAsynchronousTask extends AbstractAsynchronousTask {
     }
 
     /**
-     * Returns the task's name.
-     *
-     * @return
-     */
-    @Override
-    public abstract String getTaskName()
-
-    /**
      * Returns the task's ID.
      *
      * @return
@@ -67,6 +66,16 @@ abstract class PersistentAsynchronousTask extends AbstractAsynchronousTask {
     @Override
     public int getProgress() {
         return task.progress
+    }
+
+    /**
+     * Returns the description of the current step in the task.
+     *
+     * @return
+     */
+    @Override
+    public String getDescription() {
+        return task.description
     }
 
     /**
@@ -130,24 +139,22 @@ abstract class PersistentAsynchronousTask extends AbstractAsynchronousTask {
     }
 
     /**
-     * Starts a task.
+     * Gets the error code associated with a failed task.
      */
     @Override
-    protected void start() {
-        start(null)
+    public String getErrorCode() {
+        return task.errorCode
     }
 
     /**
-     * Starts a task.
-     *
-     * @param description Description of the current step in the overall process of the task.
+     * Marks a task as started.
      */
     @Override
-    protected void start(String description) {
-        task.description = description
+    protected void start() {
         task.state = AsynchronousTaskState.RUNNING
+        task.startTime = new Date()
         task.progress = 0
-        task.save(failOnError: true)
+        task.save(flush: true, failOnError: true)
     }
 
     /**
@@ -170,43 +177,49 @@ abstract class PersistentAsynchronousTask extends AbstractAsynchronousTask {
     protected void update(int progress, String description) {
         task.progress = progress
         task.description = description
-        task.save(failOnError: true)
+        task.save(flush: true, failOnError: true)
     }
 
     /**
-     * Sets the task in an error state.
+     * Sets the task in an error state.\
+     *
+     * @param errorCode Error code associated with a failed task.
      */
     @Override
-    protected void error() {
-        completeTask(AsynchronousTaskState.ERROR)
+    protected void error(String errorCode) {
+        error(errorCode, null)
     }
 
     /**
      * Sets the task in an error state.
      *
+     * @param errorCode Error code associated with a failed task.
      * @param results
      */
     @Override
-    protected void error(Object results) {
-        completeTask(AsynchronousTaskState.ERROR, results)
-    }
-
-    /**
-     * Sets the task in a failure state.
-     */
-    @Override
-    protected void failure() {
-        completeTask(AsynchronousTaskState.FAILURE)
+    protected void error(String errorCode, Object results) {
+        completeTask(AsynchronousTaskState.ERROR, errorCode, results)
     }
 
     /**
      * Sets the task in a failure state.
      *
+     * @param errorCode Error code associated with a failed task.
+     */
+    @Override
+    protected void failure(String errorCode) {
+        failure(errorCode, null)
+    }
+
+    /**
+     * Sets the task in a failure state.
+     *
+     * @param errorCode Error code associated with a failed task.
      * @param results
      */
     @Override
-    protected void failure(Object results) {
-        completeTask(AsynchronousTaskState.FAILURE, results)
+    protected void failure(String errorCode, Object results) {
+        completeTask(AsynchronousTaskState.FAILURE, errorCode, results)
     }
 
     /**
@@ -214,7 +227,7 @@ abstract class PersistentAsynchronousTask extends AbstractAsynchronousTask {
      */
     @Override
     protected void complete() {
-        completeTask(AsynchronousTaskState.COMPLETED)
+        complete(null)
     }
 
     /**
@@ -228,7 +241,7 @@ abstract class PersistentAsynchronousTask extends AbstractAsynchronousTask {
         task.progress = 100
 
         // Complete the task.
-        completeTask(AsynchronousTaskState.COMPLETED, results)
+        completeTask(AsynchronousTaskState.COMPLETED, null, results)
     }
 
     /**
@@ -237,16 +250,18 @@ abstract class PersistentAsynchronousTask extends AbstractAsynchronousTask {
      * @param state End state of the task.
      */
     private void completeTask(AsynchronousTaskState state) {
-        completeTask(state, null)
+        completeTask(state, null, null)
     }
 
     /**
      * Completes the task with the given state and results.
      *
      * @param state End state of the task.
+     * @param errorCode Error code associated with a failed task.
      * @param results Data associated with the completion of the task.
      */
-    private void completeTask(AsynchronousTaskState state, Object results) {
+    private void completeTask(AsynchronousTaskState state, String errorCode, Object results) {
+        task.errorCode = errorCode
         task.state = state
         task.results = marshall(results)
         task.endTime = new Date()
@@ -266,7 +281,7 @@ abstract class PersistentAsynchronousTask extends AbstractAsynchronousTask {
         }
 
         // Check for JSON conversion
-        if (results.getClass() in [List, Map]) {
+        if (results instanceof List || results instanceof Map) {
             return new JsonBuilder(results).toString()
         }
 

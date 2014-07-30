@@ -21,6 +21,11 @@ public interface AsynchronousTask {
     public int getProgress()
 
     /**
+     * Gets the description of the current step of the task.
+     */
+    public String getDescription()
+
+    /**
      * Gets the results associated with a task that has ended.
      *
      * @return
@@ -61,4 +66,14 @@ public interface AsynchronousTask {
      * @return
      */
     public Date getEndTime()
+
+    /**
+     * Runs the task.
+     */
+    public void fire()
+
+    /**
+     * Gets the error code of a failed task.
+     */
+    public String getErrorCode()
 }

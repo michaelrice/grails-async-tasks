@@ -58,15 +58,22 @@ class AsynchronousTaskDomain {
     String internalTaskData
 
     /**
+     * Name of code of the error.
+     */
+    String errorCode
+
+    /**
      * Field constraints.
      */
     static constraints = {
-        lastUpdated nullable: true
-        dateCreated nullable: true
-        endTime nullable: true
-        description nullable: true
-        results nullable: true
-        internalTaskData nullable: true
+        lastUpdated         nullable: true
+        dateCreated         nullable: true
+        startTime           nullable: true
+        endTime             nullable: true
+        description         nullable: true
+        results             nullable: true
+        internalTaskData    nullable: true
+        errorCode           nullable: true
     }
 
     /**
@@ -74,6 +81,6 @@ class AsynchronousTaskDomain {
      */
     static mapping = {
         // Disable optimistic locking
-        version = false
+        version false
     }
 }
